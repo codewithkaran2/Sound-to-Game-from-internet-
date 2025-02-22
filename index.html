@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chaos Keyboard Battle Game 🎮</title>
+  <style>
+    /* Global styles */
+    body {
+      margin: 0;
+      background: linear-gradient(45deg, #111, #333);
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      position: relative;
+      text-align: center;
+    }
+    h1, h2, p {
+      margin: 10px;
+    }
+    /* Rainbow animated title box */
+    .rainbow-title {
+      display: inline-block;
+      padding: 10px 20px;
+      font-size: 36px;
+      font-weight: bold;
+      color: white;
+      border: 5px solid;
+      border-image: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet) 1;
+      animation: rainbow 3s linear infinite;
+      margin-top: 20px;
+    }
+    @keyframes rainbow {
+      0% { border-image-source: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet); }
+      50% { border-image-source: linear-gradient(45deg, violet, indigo, blue, green, yellow, orange, red); }
+      100% { border-image-source: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet); }
+    }
+    canvas {
+      background: #222;
+      display: block;
+      margin: 60px auto 20px;
+      border: 2px solid white;
+      box-shadow: 0 0 20px rgba(255,255,255,0.2);
+    }
+    /* Overlays */
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 100;
+    }
+    .overlay.hidden {
+      display: none;
+    }
+    /* Mode selection buttons */
+    .mode-buttons {
+      margin: 20px;
+    }
+    .mode-button {
+      padding: 12px 24px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 0 10px;
+      transition: background 0.3s, transform 0.2s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    .duo-button {
+      background: blue;
+      color: white;
+    }
+    .solo-button {
+      background: gold;
+      color: black;
+    }
+    .mode-button:hover {
+      transform: translateY(2px);
+    }
+    /* Name input container */
+    .name-container {
+      margin: 10px;
+    }
+    .name-container input {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      background: #444;
+      color: white;
+      transition: background 0.3s;
+    }
+    .name-container input:hover {
+      background: #666;
+    }
+    .name-container input:disabled {
+      background: #222;
+      color: #aaa;
+    }
+    /* Button container */
+    .button-container {
+      margin: 20px;
+    }
+    .button-container button {
+      padding: 12px 24px;
+      font-size: 18px;
+      margin: 8px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: linear-gradient(45deg, #555, #333);
+      color: white;
+      transition: background 0.3s, transform 0.2s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    .button-container button:hover {
+      background: linear-gradient(45deg, #666, #444);
+      transform: translateY(2px);
+    }
+    /* Control Buttons Container (horizontal) */
+    .control-container {
+      margin: 20px auto;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+    /* Volume container styling */
+    #volumeContainer {
+      margin: 20px auto;
+      text-align: center;
+    }
+    #volumeSlider {
+      width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Start Screen Overlay -->
+  <div id="startScreen" class="overlay">
+    <div class="rainbow-title">Chaos Keyboard Battle Game 🎮</div>
+    <div class="mode-buttons">
+      <button id="duoButton" class="mode-button duo-button">Duo Mode</button>
+      <button id="soloButton" class="mode-button solo-button">Solo Mode</button>
+    </div>
+    <div class="name-container">
+      <input type="text" id="p1Name" placeholder="Enter 🟦 Player 1 Name">
+      <input type="text" id="p2Name" placeholder="Enter 🟥 Player 2 Name">
+    </div>
+    <div class="button-container">
+      <button onclick="startGame()">Start Game</button>
+    </div>
+  </div>
+  
+  <!-- Pause Screen Overlay -->
+  <div id="pauseScreen" class="overlay hidden">
+    <h1>Game Paused</h1>
+    <div class="button-container">
+      <button onclick="togglePause()">Resume</button>
+    </div>
+  </div>
+  
+  <!-- Game Over Overlay -->
+  <div id="gameOverScreen" class="overlay hidden">
+    <h1 id="winnerText">Game Over</h1>
+    <div class="button-container">
+      <button onclick="restartGame()">Restart Game</button>
+    </div>
+  </div>
+  
+  <!-- Game Canvas -->
+  <canvas id="gameCanvas" width="1200" height="600"></canvas>
+  
+  <!-- Control Buttons Container (below canvas) -->
+  <div id="controlsContainer" class="control-container">
+    <button onclick="toggleFullScreen()">Full Screen</button>
+    <button onclick="togglePause()">Pause</button>
+    <button onclick="restartGame()">Restart</button>
+    <button onclick="playAgain()">Play Again!</button>
+  </div>
+  
+  <!-- Volume Slider Container -->
+  <div id="volumeContainer">
+    <label for="volumeSlider" style="font-size: 16px;">Volume:</label>
+    <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">
+  </div>
+  
+  <!-- Audio Elements with online sources -->
+  <audio id="bgMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop></audio>
+  <audio id="shootSound" src="https://actions.google.com/sounds/v1/impulse/camera_shutter_click.ogg"></audio>
+  <audio id="hitSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+  <audio id="shieldBreakSound" src="https://actions.google.com/sounds/v1/impulse/metal_hit.ogg"></audio>
+  
+  <!-- Link to the external JavaScript file -->
+  <script src="game.js"></script>
+</body>
+</html>
